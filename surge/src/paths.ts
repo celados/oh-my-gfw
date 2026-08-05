@@ -8,7 +8,7 @@ export const DEFAULT_PROFILES_DIR = path.join(
   "Library/Application Support/Surge/Profiles",
 );
 
-/** Package root (projects/surge-merge), independent of process.cwd(). */
+/** Package root (projects/oh-my-gfw/surge), independent of process.cwd(). */
 export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 /** Default user config lives in-repo; personal credentials stay private. */

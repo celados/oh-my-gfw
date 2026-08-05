@@ -1,5 +1,10 @@
 node_modules/
 dist/
 
-# This local profile contains proxy credentials; start from default.example.ts.
-config/default.ts
+# Surge 侧:含机场订阅 URL 与代理凭据,从 default.example.ts 起步
+surge/config/default.ts
+
+# mihomo 侧:渲染产物含凭据(源模板是 config.yaml.tpl),
+# providers/ 下是订阅快照(含账号 uuid)
+mihomo/config.yaml
+mihomo/providers/*.yaml

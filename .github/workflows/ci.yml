@@ -12,6 +12,10 @@ permissions:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # surge-merge 的 bun 项目在 surge/ 子目录;mihomo/ 是纯配置,没有构建产物。
+    defaults:
+      run:
+        working-directory: surge
     steps:
       - uses: actions/checkout@v6.0.2
       - uses: oven-sh/setup-bun@v2.2.0

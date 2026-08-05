@@ -9,12 +9,16 @@ Use this when the user asks to publish, ship, or release a new version of this C
 
 ## Contract
 
-The release trigger is the `package.json` version on `main`.
+The release trigger is `surge/package.json` on `main`. Only the Surge-side CLI is
+released; `mihomo/` is pure config and has no build artifact.
+
+All the `bun` commands below run from `surge/`, matching the workflows'
+`working-directory`.
 
 ```
-bump package.json version -> validate locally -> commit -> push main
+bump surge/package.json version -> validate locally -> commit -> push main
   -> .github/workflows/release.yml tags vX.Y.Z
-  -> workflow runs check/build and uploads dist/surge-merge to the GitHub Release
+  -> workflow runs check/build and uploads surge/dist/surge-merge to the GitHub Release
 ```
 
 Do not create the tag manually unless the workflow is broken and the user explicitly accepts a manual recovery path.

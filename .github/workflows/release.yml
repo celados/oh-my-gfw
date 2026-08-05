@@ -15,6 +15,11 @@ jobs:
       should_release: ${{ steps.version.outputs.should_release }}
       version: ${{ steps.version.outputs.version }}
       tag: ${{ steps.version.outputs.tag }}
+    # surge-merge 的 bun 项目在 surge/ 子目录。注意 `git show <sha>:<path>` 里的
+    # path 始终是 repo 相对,不受 working-directory 影响 —— 那几处显式写了 surge/。
+    defaults:
+      run:
+        working-directory: surge
     steps:
       - uses: actions/checkout@v6.0.2
         with:
@@ -31,8 +36,8 @@ jobs:
           tag_exists=false
 
           if [ "$before_sha" != "0000000000000000000000000000000000000000" ] \
-            && git cat-file -e "${before_sha}:package.json" 2>/dev/null; then
-            previous_version=$(git show "${before_sha}:package.json" | jq -r '.version')
+            && git cat-file -e "${before_sha}:surge/package.json" 2>/dev/null; then
+            previous_version=$(git show "${before_sha}:surge/package.json" | jq -r '.version')
           fi
 
           if git ls-remote --exit-code --tags origin "refs/tags/$tag" >/dev/null 2>&1; then
@@ -61,6 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    defaults:
+      run:
+        working-directory: surge
     steps:
       - uses: actions/checkout@v6.0.2
         with:

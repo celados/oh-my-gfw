@@ -4,7 +4,7 @@ set -euo pipefail
 # Install surge-merge from GitHub Releases.
 # Public repos need only curl; private repos fall back to authenticated gh.
 # Override via env: SURGE_MERGE_REPO, SURGE_MERGE_VERSION (tag or "latest"), SURGE_MERGE_INSTALL_DIR.
-REPO="${SURGE_MERGE_REPO:-ethan-huo/surge-merge}"
+REPO="${SURGE_MERGE_REPO:-celados/oh-my-gfw}"
 VERSION="${SURGE_MERGE_VERSION:-latest}"
 BIN_DIR="${SURGE_MERGE_INSTALL_DIR:-$HOME/.local/bin}"
 
