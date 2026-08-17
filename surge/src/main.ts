@@ -7,6 +7,7 @@ import { c, cli } from "argc";
 import * as v from "valibot";
 
 import packageJson from "../package.json" with { type: "json" };
+import { embedSkill } from "./skill.embed.ts" with { type: "macro" };
 import { build, writeAllOutputs } from "./build.ts";
 import type { UserConfig } from "./config.ts";
 import {
@@ -67,6 +68,7 @@ const app = cli(schema, {
   name: "surge-merge",
   version: packageJson.version,
   description: "Merge Surge profiles with AI routing rules",
+  skill: embedSkill(),
 });
 
 await app.run({

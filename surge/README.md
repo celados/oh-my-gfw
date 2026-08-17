@@ -50,6 +50,5 @@ bun run build
 
 ## Agent Skill
 
-```text
-skills/surge-merge/SKILL.md
-```
+`src/SKILL.md` is the source of truth, served by `surge-merge @skill`.
+`skills/surge-merge/SKILL.md` is the harness stub for trigger selection.
