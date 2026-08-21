@@ -270,13 +270,15 @@ rules:
   - DOMAIN-SUFFIX,x.ai,Grok                     # OAuth(auth) + API(api) + OIDC discovery
   - DOMAIN-SUFFIX,grok.com,Grok                 # 推理代理 / 会话同步 / 头像
 
+  # Antigravity also uses Cloud Run hosts such as *-antigravity-*.run.app;
+  # wildcard matching catches those without routing every Cloud Run service.
+  - DOMAIN-WILDCARD,*antigravity*,GoogleAI
   - DOMAIN-SUFFIX,antigravity.google,GoogleAI
   - DOMAIN-SUFFIX,antigravity-unleash.goog,GoogleAI
-  - DOMAIN-SUFFIX,cloudcode-pa.googleapis.com,GoogleAI
-  - DOMAIN-SUFFIX,daily-cloudcode-pa.googleapis.com,GoogleAI
-  - DOMAIN-SUFFIX,generativelanguage.googleapis.com,GoogleAI
+  # Covers cloudcode-pa, daily-cloudcode-pa.sandbox, Gemini API, and OAuth;
+  # new Google API subdomains should keep the same egress identity by default.
+  - DOMAIN-SUFFIX,googleapis.com,GoogleAI
   # OAuth 必须和 cloudcode-pa 同出口,否则 Google 风控会拒绝 token
-  - DOMAIN-SUFFIX,oauth2.googleapis.com,GoogleAI
   - DOMAIN-SUFFIX,aistudio.google.com,GoogleAI
   - DOMAIN-SUFFIX,gemini.google.com,GoogleAI
   - DOMAIN-SUFFIX,ai.google.dev,GoogleAI
