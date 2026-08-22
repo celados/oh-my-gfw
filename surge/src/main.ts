@@ -3,7 +3,7 @@
 import { pathToFileURL } from "node:url";
 
 import { toStandardJsonSchema } from "@valibot/to-json-schema";
-import { c, cli } from "argc";
+import { c, cli } from "@celados/argc";
 import * as v from "valibot";
 
 import packageJson from "../package.json" with { type: "json" };
