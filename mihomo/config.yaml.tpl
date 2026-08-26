@@ -93,10 +93,10 @@ proxies:
   # Webshare 家宽住宅 IP。AI 服务对机房 IP 的风控比住宅 IP 严,这是直连出口。
   - name: s22
     type: http
-    server: "{{ bw://TODO-webshare-item-uuid/server }}"
+    server: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/server }}"
     port: 5669
-    username: "{{ bw://TODO-webshare-item-uuid/username }}"
-    password: "{{ bw://TODO-webshare-item-uuid/password }}"
+    username: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/username }}"
+    password: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/password }}"
 
   # 链式:s22 的连接本身经由 AI-Relay-JP 建立。
   # 落地仍是 s22 的家宽 IP(目标站看到的),但出境走机场日本节点。
@@ -104,10 +104,10 @@ proxies:
   # 的值可以是策略组名而不只是单个节点。
   - name: s22-via-JP
     type: http
-    server: "{{ bw://TODO-webshare-item-uuid/server }}"
+    server: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/server }}"
     port: 5669
-    username: "{{ bw://TODO-webshare-item-uuid/username }}"
-    password: "{{ bw://TODO-webshare-item-uuid/password }}"
+    username: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/username }}"
+    password: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/password }}"
     dialer-proxy: AI-Relay-JP
 
 # ============================================================================

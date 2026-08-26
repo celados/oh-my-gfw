@@ -5,7 +5,7 @@ dio 的出网配置。两条链路，同一套分流语义。
 | 目录 | 内核 | 状态 | 入口 |
 | --- | --- | --- | --- |
 | [`surge/`](surge/) | Surge 6（macOS/iOS，闭源商业） | 现役 | [surge/README.md](surge/README.md) |
-| [`mihomo/`](mihomo/) | mihomo v1.19.29（Go，开源） | 试用 | [mihomo/README.md](mihomo/README.md) |
+| [`mihomo/`](mihomo/) | mihomo v1.19.30（Go，开源） | 试用（切换准备就绪） | [mihomo/README.md](mihomo/README.md) |
 
 ## 为什么是两条
 

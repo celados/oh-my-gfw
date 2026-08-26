@@ -21,7 +21,7 @@ Surge 的替代方案，试用期。语义与 [`../surge/`](../surge/) 那条链
 ## 装 / 渲染 / 跑
 
 ```sh
-# 1. 内核(v1.19.29 起原生支持 anytls,不需要转换订阅)
+# 1. 内核(当前 v1.19.30;v1.19.29 起原生支持 anytls,不需要转换订阅)
 cp <mihomo 二进制> ~/.local/bin/mihomo
 
 # 2. 渲染配置(填入 Vaultwarden 里的 Webshare 凭据)
@@ -44,9 +44,8 @@ geodata 下载上直到成功才开始监听，失败还会留下截断的 `.dat
 `config.yaml.tpl` 里 Webshare 家宽代理(`s22`)的 server/username/password 走
 `{{ bw:// }}` 占位，渲染产物 `config.yaml` 已 gitignore。
 
-**当前 UUID 还是 `TODO-webshare-item-uuid`** ——Vaultwarden 里的条目尚未建立
-（评估当天 Touch ID 无人确认）。第一次渲染前要先建条目并把 UUID 填进模板三处。
-在那之前 `~/.config/mihomo/config.yaml` 里是可用的明文版本。
+条目已建：Vaultwarden Shared 集合 `webshare-s22`
+（`3e033f2a-2fbc-49cc-aa01-c793a62cb42d`，2026-08-25），渲染管线已闭环。
 
 ## 订阅
 
@@ -79,6 +78,16 @@ perl -0pe 's/\033\][^\a]*\a//g; s/\r\n/\n/g' airport.yaml > airport.clean.yaml
 （签名 System Extension）没有这个限制——这是两边最实在的架构差异。
 
 真要开 TUN 时，用 `route-exclude-address` / `exclude-interface` 把 tailnet 摘出去。
+
+## tailscale 实装（2026-08-25）
+
+brew formula（CLI 版 v1.102.3）：`sudo brew services start tailscale` 常驻，
+LaunchDaemon 带 keepalive + runatload。`tailscale up --accept-dns=false`——
+Surge 增强模式仍在接管 DNS，先不引入 MagicDNS，切换后重新评估。
+
+设备 `hd` = 100.127.191.38，tailnet `huodong.work@`（新建，暂无其他设备）。
+netcheck `UDP: false`：推断是 Surge System Extension 拦了 STUN，走 DERP 中继兜底，
+预期 Surge 退场后恢复直连——切换时这是 netcheck 复测项。
 
 ## Surge 能力对照
 
