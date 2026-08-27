@@ -140,9 +140,26 @@ DNS 接管对齐 Surge:系统 DNS 指 1.1.1.1 → TUN 层 dns-hijack 拦截 → 
 阿里/腾讯 DoH,污染域名 fallback 到 1.1.1.1/8.8.8.8 DoH(`respect-rules` 让
 境外 DoH 经节点出站,否则直连被 reset,fallback 形同虚设)。顶层
 `ipv6: true` 只为铺 v6 路由捕获硬编码 v6(en0 有移动全局 v6 + v6 默认路由,
-是最真实的旁路通道);应用解析侧 `dns.ipv6: false` 回 AAAA 空应答,逼 v4。
-实测:境外 v6 字面量进 TUN 后经节点 fail-closed(节点无 v6,不漏);国内
-v6 直连正常。
+是最真实的旁路通道);经系统 resolver 的应用由 `dns.ipv6: false` 回 AAAA 空
+应答,逼 v4。自带 DoH 的应用能绕过这层,由下述 sniffer 兜住。实测境外 v6
+字面量进 TUN 后经节点 fail-closed(节点无 v6,不漏);国内 v6 直连正常。
+
+**浏览器 DoH / 纯 IP 防线(2026-08-27 咖啡馆事件)**:Aside 自行访问
+`chrome.cloudflare-dns.com`,解析后的连接以 `host:""` 进入 TUN,国内站无法
+命中域名规则而落到 `MATCH → Proxy`;`linux.weixin.qq.com` 还会优先原始 v6,
+在无 v6 的咖啡馆报 `no route to host`。TLS/QUIC 443 sniffer 的三个强制项
+缺一不可:
+
+- `force-dns-mapping: true` —— 覆盖 redir-host 流量;
+- `parse-pure-ip: true` —— 嗅探没有域名的连接;
+- `override-destination: true` —— 用 SNI 替换原始 IP,再由
+  `dns.ipv6: false` 解析成 v4,不是只恢复规则判断。
+
+不重复添加微信 DIRECT 规则:恢复域名后现有 LSDirect 已命中。实际验收 Aside
+连续 3/3 加载成功,日志为
+`linux.weixin.qq.com:443 → RuleSet(LSDirect) → DIRECT`,该域无新增 v6 错误。
+回滚 sniffer 可恢复 `~/.config/mihomo/config.yaml.pre-sniffer-20260827` 后
+kickstart LaunchDaemon。
 
 代价:TUN 后 mihomo 是全网单点(root LaunchDaemon KeepAlive 兜底,进程挂 =
 断网,恢复靠 launchd 自动重启)。Surge 是系统托管的 System Extension,没有

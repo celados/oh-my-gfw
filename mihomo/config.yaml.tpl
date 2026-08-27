@@ -22,6 +22,21 @@ allow-lan: false
 
 external-controller: 127.0.0.1:9090
 
+# 浏览器自带 DoH 会把域名解析成纯 IP,绕过 dns.ipv6:false 与域名规则。
+# 三个强制项缺一不可:force-dns-mapping 覆盖 redir-host 流量;
+# parse-pure-ip 嗅探无域名连接;override-destination 用 TLS/QUIC SNI 替换
+# 原始 IP(尤其是无 v6 网络上的 AAAA),再由 dns.ipv6:false 解析成 v4。
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+  override-destination: true
+  sniff:
+    TLS:
+      ports: [443]
+    QUIC:
+      ports: [443]
+
 # TUN:接管全局路由(L3),对齐 Surge 增强模式的能力层 —— 不认系统代理/环境
 # 变量的程序、UDP、硬编码 IP 全部捕获,防漏不再依赖应用自觉。与 tailscale
 # 共存靠三层显式排除(路由最长前缀仲裁,详见 README):
