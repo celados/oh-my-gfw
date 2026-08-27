@@ -3,8 +3,10 @@ name: CI
 on:
   push:
     branches: [main]
+    paths: ['surge/**']
   pull_request:
     branches: [main]
+    paths: ['surge/**']
 
 permissions:
   contents: read
@@ -17,8 +19,8 @@ jobs:
       run:
         working-directory: surge
     steps:
-      - uses: actions/checkout@v6.0.2
-      - uses: oven-sh/setup-bun@v2.2.0
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile

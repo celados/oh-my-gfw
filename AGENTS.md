@@ -10,4 +10,4 @@
   没有明确回滚指令时不得重新启用。
 - **改分流语义** — 以 Surge 现役配置为准。mihomo 配置只保留为实验/回滚资产，
   不与 Surge 自动同步。
-- **发布** — `surge/` 的 CLI 与 release workflow 仍保持冻结；本仓库状态更新不触发发布。
+- **发布** — 只有 `surge/package.json` 的版本变化能进入 Release 路径；状态/文档更新不触发发布。

@@ -5,6 +5,9 @@ name: Release
 on:
   push:
     branches: [main]
+    # Status/docs changes must not enter the release path; only a package
+    # manifest change can represent a deliberate version bump.
+    paths: ['surge/package.json']
 
 jobs:
   detect-version-bump:
@@ -21,7 +24,7 @@ jobs:
       run:
         working-directory: surge
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - id: version
@@ -45,7 +48,7 @@ jobs:
           fi
 
           should_release=false
-          if [ "$tag_exists" != "true" ] || [ "$current_version" != "$previous_version" ]; then
+          if [ "$current_version" != "$previous_version" ]; then
             should_release=true
           fi
 
@@ -70,10 +73,10 @@ jobs:
       run:
         working-directory: surge
     steps:
-      - uses: actions/checkout@v6.0.2
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2.2.0
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
