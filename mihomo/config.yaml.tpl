@@ -299,9 +299,10 @@ rules:
   #   带通配符 → PROCESS-PATH-WILDCARD (只支持 * 和 ?)
   #   完整路径 → PROCESS-PATH
   - PROCESS-PATH-WILDCARD,/Users/dio/.local/share/claude/versions/*,Claude
-  - PROCESS-PATH,/usr/local/bin/codex,Codex
-  - PROCESS-PATH-WILDCARD,/Users/dio/.bun/install/global/node_modules/@openai/codex/*,Codex
-  - PROCESS-PATH-WILDCARD,/Users/dio/.npm-global/lib/node_modules/@openai/codex/*,Codex
+  # codex 不做进程规则:OpenAI 域名可枚举、封号宽松,域名层(openai/chatgpt/
+  # oaistatic/oaicdn/oaiusercontent)已闭环。进程层只在 Anthropic 那种"未知
+  # 遥测域走错出口就封号"的场景才值得付维护成本——codex 旧三条路径规则就因
+  # 安装器迁移静默失效过(2026-08-27 取证后删)。
   # ~/.grok/bin/grok 是符号链接,实际执行的是 downloads/grok-{version}-*
   - PROCESS-PATH-WILDCARD,/Users/dio/.grok/downloads/*,Grok
 
@@ -313,6 +314,10 @@ rules:
 
   - DOMAIN-SUFFIX,openai.com,Codex
   - DOMAIN-SUFFIX,chatgpt.com,Codex
+  # 浏览器 ChatGPT 场景的静态/内容域,与主域同出口,避免同账号出口身份割裂
+  - DOMAIN-SUFFIX,oaistatic.com,Codex
+  - DOMAIN-SUFFIX,oaicdn.com,Codex
+  - DOMAIN-SUFFIX,oaiusercontent.com,Codex
 
   - DOMAIN-SUFFIX,x.ai,Grok                     # OAuth(auth) + API(api) + OIDC discovery
   - DOMAIN-SUFFIX,grok.com,Grok                 # 推理代理 / 会话同步 / 头像
