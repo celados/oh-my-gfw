@@ -7,6 +7,15 @@ dio 的出网配置。两条链路，同一套分流语义。
 | [`surge/`](surge/) | Surge 6（macOS/iOS，闭源商业） | 已退役(2026-08-27 退场,保留为回滚资产) | [surge/README.md](surge/README.md) |
 | [`mihomo/`](mihomo/) | mihomo v1.19.30（Go，开源） | 现役(TUN 模式) | [mihomo/README.md](mihomo/README.md) |
 
+## Agent 入口：当前网络拓扑
+
+先读 [`mihomo/README.md` 的“网络拓扑速览”](mihomo/README.md#网络拓扑速览2026-08-27)。
+那里集中记录节点身份、tailnet/MagicDNS、SSH 入口、路由与 DNS 边界、已验证链路和
+尚未打通的 share 边界。简写：`hd-1` 是 dio Mac，`hz` 是 Hetzner `ops-1`，
+`do` 是家里的 `oh`；前两者在 `huodong.work@gmail.com` tailnet，`do` 当前在
+Denniffer 的 tailnet，等待 node share。
+
+
 ## 为什么是两条
 
 Surge 的 `#!include` 不能跨 profile 聚合节点、不能给节点加前缀、不能按关键字自动组池，

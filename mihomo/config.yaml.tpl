@@ -28,8 +28,9 @@ external-controller: 127.0.0.1:9090
 #   1. route-exclude-address 摘出 tailnet 网段 —— 100.64/10 比 0/1 更具体,
 #      tailscale 自己的路由本来就赢,这是双保险;
 #   2. MagicDNS(100.100.100.100) 在同网段,不进 TUN,永不被 dns-hijack 劫持;
-#   3. rules 顶部 PROCESS-NAME,tailscaled,DIRECT 放行 tailscale 自身
-#      WireGuard/STUN/DERP 出站,避免代理破坏 NAT 穿透(直连退化成 DERP)。
+#   3. tailscale 自身出站(Standalone System Extension 客户端):2026-08-27 实测
+#      mihomo connections API 未观察到该流量,ping 直连且 STUN 反射为真实公网 IP,
+#      因此当前无需进程规则;回退 CLI tailscaled 时须恢复 DIRECT 后重新验收。
 # stack=mixed 是官方文档建议值:TCP system 栈稳、UDP gvisor 栈兼容。
 # macOS 上 dns-hijack 劫持不了发往局域网的 DNS,所以系统 DNS 必须指向
 # 非 LAN 地址(值无所谓,53 端口一律在 TUN 层被拦),见 README 切换步骤。
@@ -264,13 +265,13 @@ rule-providers:
 # ============================================================================
 rules:
   # ---- 本机 / 内网 / tailnet ----
-  # tailscale 守护进程自身出站(WireGuard/STUN/DERP)必须直连:TUN 模式下这些
-  # 流量会进内核,若被代理规则抓走,STUN 反射地址错误、UDP-over-TCP 劣化,
-  # 直连退化成 DERP 中继。放在最顶层,先于一切。
-  - PROCESS-NAME,tailscaled,DIRECT
-  # 对应 Surge 的 skip-proxy + RULE-SET,LAN。tailnet 两条是兜底:100.64/10 已被
-  # route-exclude-address 摘出、tailscaled 也已按进程放行,这里再保证万一有人
-  # 把 http_proxy 指过来访问 100.x,不会被卷进代理。
+  # tailscale 客户端自身的 WireGuard/STUN/DERP 出站:2026-08-27 切换 Standalone
+  # (System Extension)后,mihomo connections API 未观察到该流量,ping hz 直连且
+  # STUN 反射为真实公网 IP,因此当前无需进程规则。回退 CLI tailscaled 变体时
+  # 不沿用这一结论:先恢复进程级 DIRECT,再重新验收。
+  # 对应 Surge 的 skip-proxy + RULE-SET,LAN。tailnet 兜底两条:100.64/10 已被
+  # route-exclude-address 摘出,这里保证万一有人把 http_proxy 指过来访问 100.x,
+  # 不会被卷进代理。
   - GEOSITE,private,DIRECT
   - GEOIP,private,DIRECT,no-resolve
   - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve
