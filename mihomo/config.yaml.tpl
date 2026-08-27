@@ -11,7 +11,10 @@
 mixed-port: 7890
 mode: rule
 log-level: info
-ipv6: false
+# 顶层开 v6 仅仅是为了让 TUN 铺 v6 路由、捕获硬编码 v6 地址的漏网流量
+# (en0 有中国移动全局 v6 + v6 默认路由,是最真实的旁路通道)。应用解析侧
+# 仍由 dns.ipv6: false 回 AAAA 空应答,逼流量走 v4。
+ipv6: true
 
 # 本机自用,不对外开放。Surge 侧的 skip-proxy(127/192.168/10/172.16/100.64) 在这里
 # 由 rules 段的 GEOIP,private + tailnet 两条覆盖,不需要单独的 bypass 列表。
@@ -19,9 +22,30 @@ allow-lan: false
 
 external-controller: 127.0.0.1:9090
 
-# 进程匹配。strict = 由内核判断是否开启,实测在 macOS 上仅靠 mixed-port(不开 TUN、
-# 非 root)就能拿到进程路径,PROCESS-PATH-WILDCARD 正常命中 —— 这是本次迁移的前提,
-# 因为不开 TUN 才能让 tailscale 完全不受影响。
+# TUN:接管全局路由(L3),对齐 Surge 增强模式的能力层 —— 不认系统代理/环境
+# 变量的程序、UDP、硬编码 IP 全部捕获,防漏不再依赖应用自觉。与 tailscale
+# 共存靠三层显式排除(路由最长前缀仲裁,详见 README):
+#   1. route-exclude-address 摘出 tailnet 网段 —— 100.64/10 比 0/1 更具体,
+#      tailscale 自己的路由本来就赢,这是双保险;
+#   2. MagicDNS(100.100.100.100) 在同网段,不进 TUN,永不被 dns-hijack 劫持;
+#   3. rules 顶部 PROCESS-NAME,tailscaled,DIRECT 放行 tailscale 自身
+#      WireGuard/STUN/DERP 出站,避免代理破坏 NAT 穿透(直连退化成 DERP)。
+# stack=mixed 是官方文档建议值:TCP system 栈稳、UDP gvisor 栈兼容。
+# macOS 上 dns-hijack 劫持不了发往局域网的 DNS,所以系统 DNS 必须指向
+# 非 LAN 地址(值无所谓,53 端口一律在 TUN 层被拦),见 README 切换步骤。
+tun:
+  enable: true
+  stack: mixed
+  auto-route: true
+  auto-detect-interface: true
+  dns-hijack:
+    - any:53
+    - tcp://any:53
+  route-exclude-address:
+    - 100.64.0.0/10
+
+# 进程匹配。strict = 由内核判断是否开启。端口模式(非 root)实测就能拿进程路径;
+# TUN 模式下以 root 运行,全量连接都能归因进程,PROCESS-PATH-WILDCARD 照常。
 find-process-mode: strict
 
 # geodata 由 berth 目录复制而来,不让内核自己下载。
@@ -30,21 +54,40 @@ find-process-mode: strict
 geodata-mode: true
 geo-auto-update: false
 
-# DNS。Surge 侧那两条注释的教训在这里同样成立:
-#   1. 别用系统 resolver —— 本地路由器 192.168.101.1 对部分域名(.md ccTLD)返回空答案,
-#      解析失败发生在建立隧道之前,换任何出口都救不了。
-#   2. 只用国内可达的 DoH(阿里/腾讯);Cloudflare 1.1.1.1 的 DoH 在国内常被 reset。
+# DNS。原则沿用 Surge 侧的两条教训:
+#   1. 别用系统 resolver —— 本地路由器对部分域名(.md ccTLD)返回空答案,
+#      解析失败发生在建立隧道之前,换任何出口都救不了;
+#   2. 国内 DoH(阿里/腾讯)解析国内域名又快又准,但被污染域名拿不到干净
+#      结果,必须有境外兜底 —— Surge 靠自己的 DoH 分流,这里的等价物是 fallback。
 #
-# 不设 `listen:` —— 内核只在内部解析(规则匹配、直连出站)时用它,不对外提供 DNS 服务。
-# 系统 resolver 和 tailscale MagicDNS(100.100.100.100)完全不受影响,这是不开 TUN 的
-# 配套前提。
+# redir-host(真实 IP):行为最接近 Surge 增强模式;fake-ip 更快但给应用假地址,
+# 对自带解析器/QUIC 的程序有额外坑,dogfood 阶段求稳。
+#
+# respect-rules:mihomo 自身的 DoH 出站走路由规则 —— 境外 DoH 命中代理规则经
+# 节点出去;不开的话境外 DoH 直连被 reset,fallback 形同虚设。不能与 prefer-h3 同开。
+#
+# fallback 配置后默认启用 fallback-filter(geoip-code CN):nameserver 结果是
+# 国内 IP 直接采用,否则采用 fallback 结果。fallback 用纯 IP 的 DoH,免去
+# default-nameserver 自举解析境外域名的死锁。
+#
+# 不设 `listen:` —— DNS 由 TUN 层 dns-hijack 导入,不对外监听;tailscale
+# MagicDNS(100.100.100.100)不经 TUN,互不干扰。
 dns:
   enable: true
   ipv6: false
   prefer-h3: false
+  enhanced-mode: redir-host
+  respect-rules: true
+  # 代理节点域名只走国内 DoH:机场节点域名国内可解析,同时避免
+  # "连节点要先解析节点域名,解析却要经节点"的自锁。
+  proxy-server-nameserver:
+    - https://223.5.5.5/dns-query
   nameserver:
     - https://223.5.5.5/dns-query
     - https://doh.pub/dns-query
+  fallback:
+    - https://1.1.1.1/dns-query
+    - https://8.8.8.8/dns-query
   # DoH 握手本身要先解析域名,这里给的是纯 IP,不构成自举死锁。
   default-nameserver:
     - 223.5.5.5
@@ -221,9 +264,13 @@ rule-providers:
 # ============================================================================
 rules:
   # ---- 本机 / 内网 / tailnet ----
-  # 对应 Surge 的 skip-proxy + RULE-SET,LAN。tailnet 两条是兜底:当前不开 TUN,
-  # tailscale 流量根本不会进内核,但万一有人把 http_proxy 指过来又访问 100.x,
-  # 这两条保证它不会被卷进代理。
+  # tailscale 守护进程自身出站(WireGuard/STUN/DERP)必须直连:TUN 模式下这些
+  # 流量会进内核,若被代理规则抓走,STUN 反射地址错误、UDP-over-TCP 劣化,
+  # 直连退化成 DERP 中继。放在最顶层,先于一切。
+  - PROCESS-NAME,tailscaled,DIRECT
+  # 对应 Surge 的 skip-proxy + RULE-SET,LAN。tailnet 两条是兜底:100.64/10 已被
+  # route-exclude-address 摘出、tailscaled 也已按进程放行,这里再保证万一有人
+  # 把 http_proxy 指过来访问 100.x,不会被卷进代理。
   - GEOSITE,private,DIRECT
   - GEOIP,private,DIRECT,no-resolve
   - IP-CIDR,100.64.0.0/10,DIRECT,no-resolve

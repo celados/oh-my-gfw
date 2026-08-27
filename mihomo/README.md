@@ -2,11 +2,11 @@
 type: Playbook
 title: mihomo on Mac
 description: >
-  dio Mac 上的 mihomo 配置：从 Surge 迁移而来的等价分流，含渲染、订阅刷新、
-  与 tailscale 共存的取舍，以及迁移期哪些已验证、哪些还没有。
+  dio Mac 上的 mihomo 配置:从 Surge 迁移而来的等价分流,TUN 模式与 tailscale
+  共存的三层排除,渲染、订阅刷新,以及哪些已验证、哪些还没有。
 when: >
-  在 Mac 上安装、渲染、启动或排查 mihomo；调整 AI 分流出口；刷新机场订阅；
-  或判断某项 Surge 能力在 mihomo 这边对应什么。
+  在 Mac 上安装、渲染、启动或排查 mihomo;调整 AI 分流出口;刷新机场订阅;
+  排查 TUN/路由/DNS 劫持;或判断某项 Surge 能力在 mihomo 这边对应什么。
 status: trial
 generated: { by: claude-code/opus-5, at: 2026-08-05T00:00:00Z }
 ---
@@ -27,13 +27,27 @@ cp <mihomo 二进制> ~/.local/bin/mihomo
 # 2. 渲染配置(填入 Vaultwarden 里的 Webshare 凭据)
 hq secret.render "{ file: 'mihomo/config.yaml.tpl' }"
 
-# 3. 安装并启动
+# 3. 安装
 mkdir -p ~/.config/mihomo
 cp mihomo/config.yaml ~/.config/mihomo/config.yaml
-mihomo -d ~/.config/mihomo
 ```
 
-`7890` 是混合代理端口，`9090` 是 external-controller。停止用 `pkill -f "mihomo -d"`。
+TUN 需要 root(macOS 创建 utun),常驻走 LaunchDaemon
+`/Library/LaunchDaemons/com.celados.mihomo.plist`(KeepAlive + RunAtLoad,
+日志 `~/.config/mihomo/daemon.{out,err}.log`):
+
+```sh
+sudo launchctl kickstart -k system/com.celados.mihomo   # 改配置后重载
+sudo launchctl bootout system/com.celados.mihomo        # 停止/回滚
+```
+
+系统 DNS 必须指向非 LAN 地址(Wi-Fi 当前 = `1.1.1.1`):macOS 上 dns-hijack
+劫持不了发往局域网的 DNS,指路由器就绕过 TUN 了。指向谁无所谓,53 端口一律
+在 TUN 层被拦,由 mihomo 的国内外 DoH 分流应答。回滚同步改回:
+`sudo networksetup -setdnsservers Wi-Fi Empty`。
+
+`7890` 混合代理端口在 TUN 之外仍可用(显式 `curl -x` 场景),`9090` 是
+external-controller。
 
 **geodata 要手动放**：`GeoIP.dat` / `GeoSite.dat` 复制到 `~/.config/mihomo/`
 （可从 `berth/systemd/mihomo/` 拿）。配置里关掉了自动下载——mihomo 会阻塞在
@@ -64,30 +78,44 @@ geodata 下载上直到成功才开始监听，失败还会留下截断的 `.dat
 perl -0pe 's/\033\][^\a]*\a//g; s/\r\n/\n/g' airport.yaml > airport.clean.yaml
 ```
 
-## 为什么不开 TUN
+## TUN 模式与 tailscale 共存(2026-08-27 起)
 
-不开 TUN 是这套配置的核心前提，不是省事：
+初版刻意不开 TUN(非 root 进程分流已可用,零路由表/DNS 侵入);切换窗口后
+升级为 TUN,对齐 Surge 增强模式的能力层:端口模式抓不到不认系统代理/环境
+变量的程序和 UDP,防漏面依赖应用自觉。平衡点是**默认全抓 + 显式摘除** ——
+两者不打架,因为摘除项都是精确命中:
 
-- **tailscale 不受影响**。TUN 会接管默认路由并劫持 DNS，跟 MagicDNS
-  (100.100.100.100) 打架。当前配置只监听端口、不碰路由表 / DNS，`tailscaled` 完全无感。
-- **进程分流照样能用**。实测 macOS 上仅靠 `mixed-port` + `find-process-mode: strict`
-  （非 root、无 TUN）就能拿到进程路径，`PROCESS-PATH-WILDCARD` 正常命中。这是
-  整个迁移可行的前提。
+1. **`tun.route-exclude-address: [100.64.0.0/10]`** —— tailnet 网段不进 TUN。
+   路由最长前缀仲裁下 tailscale 自己的 100.64/10 路由本来也赢,这是双保险;
+   实际路由表能看到 mihomo 用 `100/10 + 100.128/9` 把这个洞精确挖开。
+2. **MagicDNS 不受影响** —— 100.100.100.100 在被排除的网段里,查询走
+   tailscale 网卡,dns-hijack 永远碰不到(维持 `--accept-dns=false`)。
+3. **`PROCESS-NAME,tailscaled,DIRECT` 在 rules 最顶** —— tailscale 自身
+   WireGuard/STUN/DERP 出站直连。被代理抓走会拿到错误的 STUN 反射地址,
+   直连退化成 DERP 中继。
 
-代价：不认 `HTTP_PROXY` / 系统代理设置的程序抓不到。Surge 的增强模式
-（签名 System Extension）没有这个限制——这是两边最实在的架构差异。
+DNS 接管对齐 Surge:系统 DNS 指 1.1.1.1 → TUN 层 dns-hijack 拦截 → 国内域名
+阿里/腾讯 DoH,污染域名 fallback 到 1.1.1.1/8.8.8.8 DoH(`respect-rules` 让
+境外 DoH 经节点出站,否则直连被 reset,fallback 形同虚设)。顶层
+`ipv6: true` 只为铺 v6 路由捕获硬编码 v6(en0 有移动全局 v6 + v6 默认路由,
+是最真实的旁路通道);应用解析侧 `dns.ipv6: false` 回 AAAA 空应答,逼 v4。
+实测:境外 v6 字面量进 TUN 后经节点 fail-closed(节点无 v6,不漏);国内
+v6 直连正常。
 
-真要开 TUN 时，用 `route-exclude-address` / `exclude-interface` 把 tailnet 摘出去。
+代价:TUN 后 mihomo 是全网单点(root LaunchDaemon KeepAlive 兜底,进程挂 =
+断网,恢复靠 launchd 自动重启)。Surge 是系统托管的 System Extension,没有
+这个风险 —— 这是两边最后剩下的架构差异。
 
 ## tailscale 实装（2026-08-25）
 
 brew formula（CLI 版 v1.102.3）：`sudo brew services start tailscale` 常驻，
 LaunchDaemon 带 keepalive + runatload。`tailscale up --accept-dns=false`——
-Surge 增强模式仍在接管 DNS，先不引入 MagicDNS，切换后重新评估。
+不引入 MagicDNS,系统 DNS 由 mihomo 接管(切换后评估:维持,两层 DNS 只会打架)。
 
 设备 `hd` = 100.127.191.38，tailnet `huodong.work@`（新建，暂无其他设备）。
-netcheck `UDP: false`：推断是 Surge System Extension 拦了 STUN，走 DERP 中继兜底，
-预期 Surge 退场后恢复直连——切换时这是 netcheck 复测项。
+netcheck `UDP: false` 曾持续数日:推断是 Surge System Extension 拦了 STUN,
+走 DERP 中继兜底。2026-08-27 Surge 退场 + TUN 上线后复测:
+`UDP: true`、`MappingVariesByDestIP: false`、UPnP 可用,直连能力恢复。
 
 ## Surge 能力对照
 
@@ -116,12 +144,12 @@ netcheck `UDP: false`：推断是 Surge System Extension 拦了 STUN，走 DERP 
 已验证：130 节点加载、池聚合（JP 19 / 通用 63）、AI 组成员与默认选中同 Surge 一致、
 22 个规则集全加载（136,773 条）、分流命中全部符合预期、`s22` 出口 IP 与 Surge 一致。
 
-**未验证**：走机场 anytls 节点的出站。Surge 增强模式会捕获 mihomo 的出站连接形成
-嵌套，握手报 `failed to create session: EOF`。同版本内核 + 同订阅在 oh 上正常出网
-（已实测），所以这是同机共存问题，不是配置缺陷——需要 Surge 退场后补验证。
+**anytls 出站已验证**(2026-08-27,Surge 退场后):嵌套 EOF 消失,gstatic 204、
+出口 IP 154.92.x、Anthropic/GoogleAI 全到达;lore push(lore.celados.com:41337)
+经 TUN 按 DomainSuffix 规则 DIRECT,实时往返成功;国内直连(baidu 0.3s)不受影响。
 
 ## 还缺什么
 
-- **GUI**：Mac 上需要一个客户端接管系统代理开关（Mihomo Party / Clash Verge Rev）。
-  当前是裸 CLI，系统代理要自己设。
+- **GUI**:TUN 模式下不再需要 —— L3 接管一切,没有系统代理开关的诉求,
+  裸 CLI + LaunchDaemon 即可。
 - **iOS**：mihomo 没有官方 iOS 客户端。若 iPhone 上还在用 Surge，这条不是配置能解决的。
