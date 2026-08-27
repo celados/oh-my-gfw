@@ -106,6 +106,27 @@ v6 直连正常。
 断网,恢复靠 launchd 自动重启)。Surge 是系统托管的 System Extension,没有
 这个风险 —— 这是两边最后剩下的架构差异。
 
+## 排查
+
+四维度(进程/host/命中规则/出口链)两个面全覆盖,都在本机:
+
+```sh
+# 实时连接表:每条连接带进程、规则、完整出口链(chains 逆序 = 流量路径)
+curl -s http://127.0.0.1:9090/connections | jq '.connections[] | {host: .metadata.host,
+  proc: .metadata.process, rule: (.rule + "/" + .rulePayload), chains: (.chains|reverse)}'
+
+# match 日志:一行一条,含进程归因与命中规则
+tail -f ~/.config/mihomo/daemon.out.log | grep --line-buffered match
+
+# 路由体检:TUN 覆盖面全在,100/10 与 100.128/9 之间不该出现 utun4(那是 tailnet 的洞)
+netstat -rn -f inet | grep utun4
+```
+
+全网断的排查顺序:① `launchctl print system/com.celados.mihomo` 看 state/pid
+(crash-loop 时 launchd 有 10s 节流);② `tail daemon.err.log` 看配置错误;
+③ 应急先恢复 DNS:`sudo networksetup -setdnsservers Wi-Fi Empty` —— 系统
+DNS 指着 1.1.1.1,mihomo 不在线时它不可达,等于没有任何解析。
+
 ## tailscale 实装（2026-08-25）
 
 brew formula（CLI 版 v1.102.3）：`sudo brew services start tailscale` 常驻，

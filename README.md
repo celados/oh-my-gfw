@@ -4,8 +4,8 @@ dio 的出网配置。两条链路，同一套分流语义。
 
 | 目录 | 内核 | 状态 | 入口 |
 | --- | --- | --- | --- |
-| [`surge/`](surge/) | Surge 6（macOS/iOS，闭源商业） | 现役 | [surge/README.md](surge/README.md) |
-| [`mihomo/`](mihomo/) | mihomo v1.19.30（Go，开源） | 试用（切换准备就绪） | [mihomo/README.md](mihomo/README.md) |
+| [`surge/`](surge/) | Surge 6（macOS/iOS，闭源商业） | 已退役(2026-08-27 退场,保留为回滚资产) | [surge/README.md](surge/README.md) |
+| [`mihomo/`](mihomo/) | mihomo v1.19.30（Go，开源） | 现役(TUN 模式) | [mihomo/README.md](mihomo/README.md) |
 
 ## 为什么是两条
 
@@ -16,7 +16,8 @@ mihomo 把这三件事都做进了内核（`override.additional-prefix`、`inclu
 + `filter`、`proxy-providers` 自带订阅刷新），所以 `mihomo/` 里没有构建工具，只有一份
 手写配置。
 
-迁移若落地，`surge/` 连同它的 CLI 一起归档——那 800 多行构建逻辑届时没有存在理由。
+迁移已落地(2026-08-27 切换完成,验证记录见 [mihomo/README.md](mihomo/README.md)
+迁移状态段)。`surge/` 保留为回滚资产,soak 一个稳定周期后连同 CLI 一起归档。
 完整能力对照表在 [mihomo/README.md](mihomo/README.md)。
 
 ## 共同的分流语义
