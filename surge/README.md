@@ -1,5 +1,9 @@
 # surge-merge
 
+**Status:** Surge 6.7.0 is the active Mac runtime. This directory remains the profile
+builder and repository-owned tooling; live runtime state is recorded in
+[STATUS.md](STATUS.md).
+
 Merge Surge carrier profiles with AI routing rules into one `Merged.conf`.
 
 Agent-native CLI on [argc](https://github.com/ethan-huo/argc) + Bun. Sources and

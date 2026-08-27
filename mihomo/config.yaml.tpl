@@ -1,3 +1,6 @@
+# ARCHIVED 2026-08-27：mihomo 在 Mac 上是一次失败试行；Surge 已回切为现役默认网络。
+# 本模板保留作复盘/回滚资产，Mac 本机 com.celados.mihomo LaunchDaemon 已停用并禁用。
+#
 # mihomo on Mac — 从 Surge Merged.conf 迁移而来。渲染与部署见同目录 README.md。
 #
 # 语义对照的源头是 `surge/config/default.ts`(本地未跟踪,真实副本在 Surge Profiles 下)。

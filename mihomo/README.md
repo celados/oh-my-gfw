@@ -2,26 +2,42 @@
 type: Playbook
 title: mihomo on Mac
 description: >
-  dio Mac 上的 mihomo 配置、当前 tailnet 拓扑(hd-1/hz/oh)、TUN 与 DNS 共存边界、
-  从 Surge 迁移的等价分流、渲染、订阅刷新，以及已经验证和仍待完成的链路。
+  dio Mac 上 Mihomo 失败试行的复盘、TUN 网络切换问题、历史 tailnet 拓扑、
+  渲染部署步骤与保留下来的回滚资产。
 when: >
-  需要快速理解 dio Mac、hz/ops-1 与 oh/do 的网络环境;安装、渲染、启动或排查
-  mihomo;调整 AI 分流出口;刷新机场订阅;排查 TUN/路由/DNS;或判断 Surge 能力映射时。
-status: trial
-generated: { by: openai-codex/gpt-5.6-sol, at: '2026-08-27T05:31:47Z' }
+  需要理解为什么 Mihomo 从 dio Mac 退场、准备一次显式回滚、复用服务器侧显式代理，
+  或对照 Surge/mihomo 能力时。这里不再是当前网络入口。
+status: retired
+generated: { by: openai-codex/gpt-5, at: '2026-08-27T11:22:40Z' }
 ---
 
 # mihomo on Mac
 
-Surge 的替代方案，试用期。语义与 [`../surge/`](../surge/) 那条链路一一对应，
+**已归档的失败试行。** 语义与 [`../surge/`](../surge/) 那条链路一一对应，
 但**没有构建步骤**——节点前缀、跨源聚合、订阅刷新都是内核原生能力，配置就是最终态。
 
 对照关系见 [`../README.md`](../README.md)。
 
-## 装 / 渲染 / 跑
+## 结论与当前状态
+
+- 分流语义、130 个节点、anytls 出口、国内外访问和 Tailscale 共存都曾验证通过。
+- 失败点是网络切换韧性：两次 Wi‑Fi/网络切换后，Mihomo 记录
+  `default interface lost by monitor`，随后 DIRECT/Proxy 连接报 `interface not found`
+  或超时，微信/WeType 进入半可用状态，之后才自行恢复。
+- 失败链路没有经过 Tailscale；主因不是机场节点质量，也不是 Tailscale。
+- 2026-08-27 已回退 Surge。当前 Surge 状态见
+  [../surge/STATUS.md](../surge/STATUS.md)。
+- Mac 本机 `system/com.celados.mihomo` 已停用并禁用；二进制、渲染配置、
+  LaunchDaemon plist 和本模板都保留为显式回滚资产。
+
+回滚必须作为专门维护动作执行：先停 Surge，把 Wi‑Fi DNS 恢复为 `1.1.1.1`，再
+enable/bootstrap `/Library/LaunchDaemons/com.celados.mihomo.plist`。不要在 Surge
+仍拥有默认路由时把 Mihomo 当实验打开。
+
+## 归档操作：装 / 渲染 / 跑
 
 ```sh
-# 1. 内核(当前 v1.19.30;v1.19.29 起原生支持 anytls,不需要转换订阅)
+# 1. 内核(归档版本 v1.19.30;v1.19.29 起原生支持 anytls,不需要转换订阅)
 cp <mihomo 二进制> ~/.local/bin/mihomo
 
 # 2. 渲染配置(填入 Vaultwarden 里的 Webshare 凭据)
@@ -39,12 +55,12 @@ TUN 需要 root(macOS 创建 utun),常驻走 LaunchDaemon
 ```sh
 sudo launchctl kickstart -k system/com.celados.mihomo   # 改配置后重载
 sudo launchctl bootout system/com.celados.mihomo        # 停止/回滚
-```
 
 # 重载后有 ~20s 窗口系统解析器可能命中否定缓存(curl 报 Could not resolve,
 # dig 直查却正常即此因)——等它过期,急就 sudo dscacheutil -flushcache。
+```
 
-系统 DNS 必须指向非 LAN 地址(Wi-Fi 当前 = `1.1.1.1`):macOS 上 dns-hijack
+系统 DNS 必须指向非 LAN 地址(试行时 Wi-Fi = `1.1.1.1`):macOS 上 dns-hijack
 劫持不了发往局域网的 DNS,指路由器就绕过 TUN 了。指向谁无所谓,53 端口一律
 在 TUN 层被拦,由 mihomo 的国内外 DoH 分流应答。回滚同步改回:
 `sudo networksetup -setdnsservers Wi-Fi Empty`。
@@ -66,7 +82,7 @@ geodata 下载上直到成功才开始监听，失败还会留下截断的 `.dat
 
 ## 订阅
 
-`proxy-providers.airport` 当前是 `type: file` 快照，内容从 oh 的
+`proxy-providers.airport` 试行时是 `type: file` 快照，内容从 oh 的
 `/etc/mihomo/providers/airport.yaml` 拷贝而来。
 
 **这家机场的订阅 URL 带一次性闸门**：URL 本身稳定（Vaultwarden
@@ -81,10 +97,11 @@ geodata 下载上直到成功才开始监听，失败还会留下截断的 `.dat
 perl -0pe 's/\033\][^\a]*\a//g; s/\r\n/\n/g' airport.yaml > airport.clean.yaml
 ```
 
-## 网络拓扑速览（2026-08-27）
+## 归档拓扑快照（2026-08-27，Mihomo 退场前）
 
-这里是 Agent 的网络入口。IP 是当日快照；自动化优先使用 MagicDNS/SSH alias，
-不要把 100.x 地址复制成第二份配置源。
+以下不是当前 Agent 网络入口，只是试行当日快照；当前状态先读
+[../surge/STATUS.md](../surge/STATUS.md)。IP 不要复制成第二份配置源，
+自动化优先使用 MagicDNS/SSH alias。
 
 ```text
 Internet / GFW
@@ -93,32 +110,31 @@ Internet / GFW
 hd-1 · dio Mac · macOS · 100.77.236.85
   ├─ mihomo v1.19.30 TUN：普通/AI 出网；显式排除 100.64.0.0/10
   └─ Tailscale Standalone · huodong.work@gmail.com · tail2e95be.ts.net
-       └─ hz = ops-1 · Hetzner · 100.125.64.74 · SSH root:2222
 
 Denniffer 的 tailnet
-  └─ do = oh · 家庭 Ubuntu · 100.83.72.30 · LAN 192.168.101.24:22
-       └─ node share 给 huodong.work@gmail.com：已答应，邀请待发
+  ├─ ops1 · Hetzner ops-1 · 100.82.110.14 · SSH root:2222
+  └─ oh · 家庭 Ubuntu · 100.83.72.30 · LAN 192.168.101.24:22
 ```
 
-| 节点 | 稳定入口 | 客户端形态 | 当前状态 |
+| 节点 | 稳定入口 | 客户端形态 | 当日状态 |
 | --- | --- | --- | --- |
-| `hd-1`（dio Mac） | `hd-1.tail2e95be.ts.net` | Standalone GUI / System Extension | 当前控制端；旧 `hd`/100.127.191.38 是待删离线节点 |
-| `hz`（ops-1） | `hz.tail2e95be.ts.net`；公网 `204.168.246.193:2222` | Linux CLI `tailscaled` / systemd | Mac↔hz WireGuard 直连及 `ssh hz` 已验证 |
-| `do`（oh） | tailnet `100.83.72.30`；家庭 LAN `192.168.101.24:22` | Linux CLI `tailscaled`；mihomo 仅显式代理端口 | 当前不在 dio tailnet 视野；等 Denniffer share |
+| `hd-1`（dio Mac） | `hd-1.tail2e95be.ts.net` | Standalone GUI / System Extension | 当日连接 dio 自己的 tailnet；旧 `hd` 已删除 |
+| `ops1`（ops-1） | `ops1.tailaf8030.ts.net`；公网 `204.168.246.193:2222` | Linux CLI `tailscaled` / systemd | 已迁入 Denniffer tailnet；Mac 需切换 tailnet 后使用 `ssh ops1` |
+| `oh` | `oh.tailaf8030.ts.net`；家庭 LAN `192.168.101.24:22` | Linux CLI `tailscaled`；mihomo 仅显式代理端口 | Denniffer tailnet 在线；原 Tailscale 名 `do` 已改为 `oh` |
 
-必须维持的边界：
+当时的边界：
 
 1. Mac 默认流量进 mihomo TUN；`100.64.0.0/10` 从路由层摘除，tailnet 数据面不进代理。
 2. MagicDNS `100.100.100.100` 是 `.ts.net` 的 Supplemental resolver；系统主解析仍为
    `1.1.1.1`，其 53 流量由 mihomo DNS hijack 接管。
-3. `hz`/`oh` 是服务器，使用登录前在线的 CLI `tailscaled`。`hz` 不接管默认路由；
+3. `ops1`/`oh` 是服务器，使用登录前在线的 CLI `tailscaled`。`ops1` 不接管默认路由；
    `oh` 的 mihomo 不开 TUN，只通过 `127.0.0.1:7890` 服务本机软件。
-4. 当前已验证链路只有 Mac↔hz；Mac↔oh 必须等 node share 后再以
-   `tailscale ping 100.83.72.30` 和 `ssh oh@100.83.72.30` 验收。
+4. Mac 当日连接自己的 tailnet，访问 `ops1`/`oh` 前必须切换到 Denniffer tailnet；
+   公网 `root@204.168.246.193:2222` 是 `ops1` 的独立救援入口。
 
 跨项目详细源：`projects/berth/hosts/ops-1.md`、`projects/berth/hosts/oh.md`。
 
-## TUN 模式与 tailscale 共存(2026-08-27 起)
+## 归档设计：TUN 模式与 tailscale 共存(2026-08-27)
 
 初版刻意不开 TUN(非 root 进程分流已可用,零路由表/DNS 侵入);切换窗口后
 升级为 TUN,对齐 Surge 增强模式的能力层:端口模式抓不到不认系统代理/环境
@@ -176,7 +192,7 @@ sudo launchctl kickstart -k system/com.celados.mihomo
 断网,恢复靠 launchd 自动重启)。Surge 是系统托管的 System Extension,没有
 这个风险 —— 这是两边最后剩下的架构差异。
 
-## 排查
+## 归档排查
 
 四维度(进程/host/命中规则/出口链)两个面全覆盖,都在本机:
 
@@ -206,9 +222,9 @@ DNS 指着 1.1.1.1,mihomo 不在线时它不可达,等于没有任何解析。
 （人带着走、FileVault 解锁使"无人值守重启恢复"不成立），按官方默认推荐迁 **Standalone**
 （System Extension）：保留 exit-node **客户端资格**与完整 Taildrop。注意"借家里 oh 出口"
 只是客户端侧的选项开通,成路还需 oh 侧 `--advertise-exit-node` 且在其管理台获批准,
-两者当前均未验证。tailscaled（CLI/utun）归位给 oh 这类真正的无值守服务器。
+两者当时均未验证。tailscaled（CLI/utun）归位给 oh 这类真正的无值守服务器。
 迁移已于 2026-08-27 执行。新节点 `hd-1` = 100.77.236.85（MagicDNS
-`hd-1.tail2e95be.ts.net`；`hd` 名被旧节点占用，控制台删除旧 `hd` 后可改回）。
+`hd-1.tail2e95be.ts.net`；旧 `hd` 已从控制台删除）。
 Standalone Settings 的 Command Line Integration 已显示安装成功。本机同时存在
 `/usr/local/bin/tailscale` 与 `/opt/homebrew/bin/tailscale` 两份内容、时间一致的 launcher，
 均转发到 app bundle；保留现状。普通 shell 的 `status`/`version` 已实跑通过，官方
@@ -216,12 +232,13 @@ Standalone Settings 的 Command Line Integration 已显示安装成功。本机�
 非交互脚本必须显式设置该变量；相关项目脚本中没有受影响的 Mac 侧调用点。
 实测：MagicDNS 以 Supplemental resolver 挂载，仅接管 `*.ts.net`，系统主解析仍为
 mihomo 的 1.1.1.1；mihomo connections API 未观察到客户端自身出站（"共存"第 3 条）。
-同日 ops-1（Hetzner，tailnet 节点名 `hz`）= 100.125.64.74 加入同 tailnet，
-Mac↔hz 直连验证通过；旧 `hd` 节点成离线孤儿，待控制台手动删除。
+同日 ops-1 曾以节点名 `hz` = 100.125.64.74 加入同 tailnet，Mac↔hz 直连验证通过。
+随后按统一团队网络的决定迁入 Denniffer tailnet，节点名改为 `ops1` = 100.82.110.14；
+旧 `hz` 注册已删除。家庭主机的 Tailscale 名也从 `do` 改为 `oh`。
 依据:官方 variants 表
 https://tailscale.com/docs/concepts/macos-variants (2026-01-05 校验)。
 netcheck `UDP: false` 曾持续数日:推断是 Surge System Extension 拦了 STUN,
-走 DERP 中继兜底。2026-08-27 Surge 退场 + TUN 上线后复测:
+走 DERP 中继兜底。2026-08-27 Mihomo 试行窗口中复测:
 `UDP: true`、`MappingVariesByDestIP: false`、UPnP 可用,直连能力恢复。
 
 ## Surge 能力对照
@@ -237,7 +254,7 @@ netcheck `UDP: false` 曾持续数日:推断是 Surge System Extension 拦了 ST
 | `RULE-SET,<url>` | `rule-providers` (`classical` / `text`) | 同一批 URL 直接可用 |
 | `skip-proxy` / `RULE-SET,LAN` | `GEOSITE,private` + `GEOIP,private` | |
 | `udp-policy-not-supported-behaviour` | **无等价** | 见下 |
-| MITM / URL Rewrite / Header Rewrite | **无** | 当前配置未使用 |
+| MITM / URL Rewrite / Header Rewrite | **无** | 试行配置未使用 |
 
 `USER-AGENT` 规则（HotKids 那三个规则集里有）mihomo 不支持，实测是 warning 跳过
 单行，provider 其余规则照常加载，不影响启动。
@@ -246,16 +263,16 @@ netcheck `UDP: false` 曾持续数日:推断是 Surge System Extension 拦了 ST
 出口回退成 DIRECT，避免静默丢包（lore push 的 QUIC UDP 41337 曾因此排障半天）。
 这里唯一的防线是 rules 段 `DOMAIN-SUFFIX,celados.com,DIRECT`，别删。
 
-## 迁移状态
+## 试行结论
 
 已验证：130 节点加载、池聚合（JP 19 / 通用 63）、AI 组成员与默认选中同 Surge 一致、
 22 个规则集全加载（136,773 条）、分流命中全部符合预期、`s22` 出口 IP 与 Surge 一致。
 
-**anytls 出站已验证**(2026-08-27,Surge 退场后):嵌套 EOF 消失,gstatic 204、
+**anytls 出站已验证**(2026-08-27,Mihomo 试行窗口):嵌套 EOF 消失,gstatic 204、
 出口 IP 154.92.x、Anthropic/GoogleAI 全到达;lore push(lore.celados.com:41337)
 经 TUN 按 DomainSuffix 规则 DIRECT,实时往返成功;国内直连(baidu 0.3s)不受影响。
 
-## 还缺什么
+## 当时的剩余缺口
 
 - **GUI**:TUN 模式下不再需要 —— L3 接管一切,没有系统代理开关的诉求,
   裸 CLI + LaunchDaemon 即可。

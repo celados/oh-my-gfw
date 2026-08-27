@@ -10,8 +10,8 @@ An agent-native CLI built with [argc](https://github.com/ethan-huo/argc) on Bun.
 - **Releasing this tool** — use `../.agents/skills/release/SKILL.md`; release is a
   `package.json` version bump pushed to `main`, then the workflow tags and
   publishes. CI/release run with `working-directory: surge`.
-- **This is one of two links** — the mihomo side lives in `../mihomo/`. Changing
-  routing semantics here without mirroring it there makes the two drift; see
-  `../README.md`.
+- **Runtime is active again** — check [STATUS.md](STATUS.md) and use the Surge skill for
+  live operations. The mihomo side is an archived failed trial, not a synchronized
+  runtime.
 - **Runtime is Bun** — prefer its native APIs and check the source of truth at
   <https://bun.sh/llms.txt> instead of guessing from memory.
