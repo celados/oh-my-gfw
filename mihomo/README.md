@@ -41,6 +41,9 @@ sudo launchctl kickstart -k system/com.celados.mihomo   # 改配置后重载
 sudo launchctl bootout system/com.celados.mihomo        # 停止/回滚
 ```
 
+# 重载后有 ~20s 窗口系统解析器可能命中否定缓存(curl 报 Could not resolve,
+# dig 直查却正常即此因)——等它过期,急就 sudo dscacheutil -flushcache。
+
 系统 DNS 必须指向非 LAN 地址(Wi-Fi 当前 = `1.1.1.1`):macOS 上 dns-hijack
 劫持不了发往局域网的 DNS,指路由器就绕过 TUN 了。指向谁无所谓,53 端口一律
 在 TUN 层被拦,由 mihomo 的国内外 DoH 分流应答。回滚同步改回:
