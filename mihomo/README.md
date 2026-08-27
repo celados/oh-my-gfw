@@ -147,8 +147,9 @@ DNS 接管对齐 Surge:系统 DNS 指 1.1.1.1 → TUN 层 dns-hijack 拦截 → 
 **浏览器 DoH / 纯 IP 防线(2026-08-27 咖啡馆事件)**:Aside 自行访问
 `chrome.cloudflare-dns.com`,解析后的连接以 `host:""` 进入 TUN,国内站无法
 命中域名规则而落到 `MATCH → Proxy`;`linux.weixin.qq.com` 还会优先原始 v6,
-在无 v6 的咖啡馆报 `no route to host`。TLS/QUIC 443 sniffer 的三个强制项
-缺一不可:
+在无 v6 的咖啡馆报 `no route to host`。TLS/QUIC sniffer 对浏览器覆盖 443;
+lore 的 gRPCS 端口 41337 也必须覆盖,否则客户端解析成 IP 后会落到
+`MATCH → Proxy`。三个强制项缺一不可:
 
 - `force-dns-mapping: true` —— 覆盖 redir-host 流量;
 - `parse-pure-ip: true` —— 嗅探没有域名的连接;
@@ -158,8 +159,10 @@ DNS 接管对齐 Surge:系统 DNS 指 1.1.1.1 → TUN 层 dns-hijack 拦截 → 
 不重复添加微信 DIRECT 规则:恢复域名后现有 LSDirect 已命中。实际验收 Aside
 连续 3/3 加载成功,日志为
 `linux.weixin.qq.com:443 → RuleSet(LSDirect) → DIRECT`,该域无新增 v6 错误。
-回滚 sniffer 可恢复 `~/.config/mihomo/config.yaml.pre-sniffer-20260827` 后
-kickstart LaunchDaemon。
+全局回归同时覆盖 Google 204、国内 DIRECT、Anthropic/ChatGPT 组、lore
+41337 DIRECT 与 Tailscale UDP/status。回滚时用最近的
+`~/.config/mihomo/config.yaml.pre-sniffer-*` 覆盖运行配置,再 kickstart
+LaunchDaemon。
 
 代价:TUN 后 mihomo 是全网单点(root LaunchDaemon KeepAlive 兜底,进程挂 =
 断网,恢复靠 launchd 自动重启)。Surge 是系统托管的 System Extension,没有

@@ -33,9 +33,9 @@ sniffer:
   override-destination: true
   sniff:
     TLS:
-      ports: [443]
+      ports: [443, 41337]
     QUIC:
-      ports: [443]
+      ports: [443, 41337]
 
 # TUN:接管全局路由(L3),对齐 Surge 增强模式的能力层 —— 不认系统代理/环境
 # 变量的程序、UDP、硬编码 IP 全部捕获,防漏不再依赖应用自觉。与 tailscale
