@@ -160,9 +160,17 @@ lore 的 gRPCS 端口 41337 也必须覆盖,否则客户端解析成 IP 后会�
 连续 3/3 加载成功,日志为
 `linux.weixin.qq.com:443 → RuleSet(LSDirect) → DIRECT`,该域无新增 v6 错误。
 全局回归同时覆盖 Google 204、国内 DIRECT、Anthropic/ChatGPT 组、lore
-41337 DIRECT 与 Tailscale UDP/status。回滚时用最近的
-`~/.config/mihomo/config.yaml.pre-sniffer-*` 覆盖运行配置,再 kickstart
-LaunchDaemon。
+41337 DIRECT 与 Tailscale UDP/status。长期回滚必须从 source-of-truth 删除
+`config.yaml.tpl` 的 sniffer 段,再执行:
+
+```sh
+hq secret.render "{ file: 'mihomo/config.yaml.tpl' }"
+cp mihomo/config.yaml ~/.config/mihomo/config.yaml
+sudo launchctl kickstart -k system/com.celados.mihomo
+```
+
+`~/.config/mihomo/config.yaml.pre-sniffer-*` 仅供本次现场断网应急,配置继续演进后
+会变陈旧,不得作为未来标准回滚路径。
 
 代价:TUN 后 mihomo 是全网单点(root LaunchDaemon KeepAlive 兜底,进程挂 =
 断网,恢复靠 launchd 自动重启)。Surge 是系统托管的 System Extension,没有
