@@ -5,6 +5,7 @@
 - **Surge 是现役运行时** — 运行时操作先读 `.agents/skills/surge/SKILL.md` 并使用
   `surge-cli`。真实配置源是 Surge Profiles 下的本地未跟踪文件，仓库内示例不是
   live state；不要只看静态文件判断实际路由。
+- **网络排障硬门禁** — 默认只读；任何可能重建 TUN、改变路由/DNS 或中断连接的 reload、restart、switch 操作，必须先给出防断网与恢复方案并获得用户明确确认，禁止在承载当前 agent session 的网络上直接试验。
 - **mihomo 是已归档的失败试行** — 只读 [`mihomo/README.md`](mihomo/README.md)
   了解结论与回滚资产。Mac 本机的 `com.celados.mihomo` LaunchDaemon 已停用并禁用；
   没有明确回滚指令时不得重新启用。

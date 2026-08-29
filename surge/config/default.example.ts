@@ -72,5 +72,12 @@ export default defineConfig({
   ],
 
   finalPolicy: "Proxy",
+  template: {
+    rules: [
+      // WeChat resolves image CDN hosts internally and connects by IP. Keep only
+      // its QUIC path direct so embedded foreign web content retains normal routing.
+      "AND,((PROCESS-NAME,WeChat),(PROTOCOL,QUIC)),DIRECT",
+    ],
+  },
   output: "./Merged.conf",
 });
