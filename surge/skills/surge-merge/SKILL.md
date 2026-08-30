@@ -1,11 +1,10 @@
 ---
 name: "surge-merge"
 description: >-
-  Merge multiple Surge profiles into one Merged.conf with AI routing
-  (process/domain rules, relay pools, chained outlets). Activate when building
-  or regenerating Surge config, merging carrier subscriptions, or changing AI
-  proxy routing (Claude/Codex/Grok/Gemini process rules).
+  When a task requires building or regenerating a merged Surge profile,
+  combining carrier subscriptions, or changing AI process, domain, relay, or
+  chained-outlet routing, run `surge-merge @skill` immediately to load the full
+  usage guide.
 ---
 
 Run `surge-merge @skill` now for the full usage guide.
-Read a referenced file with `surge-merge @skill <path>`.

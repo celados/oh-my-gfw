@@ -6,7 +6,7 @@ An agent-native CLI built with [argc](https://github.com/ethan-huo/argc) on Bun.
   handler, stdout, and release conventions; don't restate them here.
 - **Using this tool** — `src/SKILL.md` is the source of truth, served by
   `surge-merge @skill`. `skills/surge-merge/SKILL.md` is the harness stub
-  (trigger selection only).
+  (intent-to-`@skill` routing in its description; one-line body fallback).
 - **Releasing this tool** — use `../.agents/skills/release/SKILL.md`; release is a
   `package.json` version bump pushed to `main`, then the workflow tags and
   publishes. CI/release run with `working-directory: surge`.
