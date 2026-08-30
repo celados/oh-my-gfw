@@ -70,4 +70,4 @@ Types live in `src/config.ts`. Default personal config: `config/default.ts`.
 ## Self-Improvement
 
 When schema, defaults, or build semantics drift from this skill, update
-`surge/src/SKILL.md` in the oh-my-gfw repo.
+`surge/src/index.md` in the oh-my-gfw repo.

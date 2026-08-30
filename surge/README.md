@@ -54,6 +54,6 @@ bun run build
 
 ## Agent Skill
 
-`src/SKILL.md` is the source of truth, served by `surge-merge @skill`.
+`src/index.md` is the source of truth, served by `surge-merge @skill`.
 `skills/surge-merge/SKILL.md` routes matching intent directly to `surge-merge
 @skill`; its body is only a harness fallback.
