@@ -7,7 +7,7 @@
 # 那份 TS 配置 + surge-merge 构建工具在这里不再需要:节点前缀、跨源聚合、订阅刷新
 # 都由内核原生完成,这份 YAML 是手写的最终态,没有构建步骤。
 #
-# 渲染: hq secret.render "{ file: 'mihomo/config.yaml.tpl' }"
+# 渲染: latch render "{ file: 'mihomo/config.yaml.tpl', format: 'raw' }"
 # 安装: cp mihomo/config.yaml ~/.config/mihomo/config.yaml
 # 跑起来: mihomo -d ~/.config/mihomo
 

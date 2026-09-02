@@ -41,7 +41,7 @@ enable/bootstrap `/Library/LaunchDaemons/com.celados.mihomo.plist`。不要在 S
 cp <mihomo 二进制> ~/.local/bin/mihomo
 
 # 2. 渲染配置(填入 Vaultwarden 里的 Webshare 凭据)
-hq secret.render "{ file: 'mihomo/config.yaml.tpl' }"
+latch render "{ file: 'mihomo/config.yaml.tpl', format: 'raw' }"
 
 # 3. 安装
 mkdir -p ~/.config/mihomo
@@ -180,7 +180,7 @@ lore 的 gRPCS 端口 41337 也必须覆盖,否则客户端解析成 IP 后会�
 `config.yaml.tpl` 的 sniffer 段,再执行:
 
 ```sh
-hq secret.render "{ file: 'mihomo/config.yaml.tpl' }"
+latch render "{ file: 'mihomo/config.yaml.tpl', format: 'raw' }"
 cp mihomo/config.yaml ~/.config/mihomo/config.yaml
 sudo launchctl kickstart -k system/com.celados.mihomo
 ```

@@ -8,3 +8,6 @@ surge/config/default.ts
 # providers/ 下是订阅快照(含账号 uuid)
 mihomo/config.yaml
 mihomo/providers/*.yaml
+
+# network credentials rendered from devices.env.tpl
+network/devices.env

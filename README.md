@@ -47,4 +47,4 @@ Surge。完整复盘与能力对照在 [mihomo/README.md](mihomo/README.md)。
 ## 密钥
 
 两边的凭据都不进 git：`surge/config/default.ts` 直接 gitignore；`mihomo/config.yaml`
-由 `config.yaml.tpl` 渲染。走 Vaultwarden + `hq secret.render`，与 `berth` 一致。
+由 `config.yaml.tpl` 渲染。走 Vaultwarden + `latch render`，与 `berth` 一致。
