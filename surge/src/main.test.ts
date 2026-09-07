@@ -26,7 +26,10 @@ test("@schema lists build", async () => {
 });
 
 test("build dryRun smoke", async () => {
-  const { stdout, stderr, exitCode } = await run("build", "{ dryRun: true, verbose: false }");
+  const { stdout, stderr, exitCode } = await run(
+    "build",
+    "{ config: 'config/default.example.ts', dryRun: true, verbose: false }",
+  );
   expect(exitCode, stderr).toBe(0);
   expect(stdout).toMatch(/dryRun:\s*true/);
   expect(stdout).toMatch(/bytes:\s*\d+/);
