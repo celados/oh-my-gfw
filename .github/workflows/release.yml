@@ -49,7 +49,7 @@ jobs:
           fi
 
           should_release=false
-          if [ "$current_version" != "$previous_version" ]; then
+          if [ "$tag_exists" != "true" ] || [ "$current_version" != "$previous_version" ]; then
             should_release=true
           fi
 
