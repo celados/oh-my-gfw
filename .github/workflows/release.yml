@@ -7,7 +7,7 @@ on:
     branches: [main]
     # Status/docs changes must not enter the release path; only a package
     # manifest change can represent a deliberate version bump.
-    paths: ['surge/package.json']
+    paths: ["surge/package.json"]
 
 jobs:
   detect-version-bump:
@@ -79,6 +79,12 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+      - name: Configure Celados npm registry
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          printf '%s\n' '@celados:registry=https://npm.celados.com' > .npmrc
+          printf '%s\n' "//npm.celados.com/:_authToken=${NODE_AUTH_TOKEN}" >> .npmrc
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun run build
