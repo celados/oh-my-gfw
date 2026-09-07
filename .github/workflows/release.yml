@@ -8,6 +8,7 @@ on:
     # Status/docs changes must not enter the release path; only a package
     # manifest change can represent a deliberate version bump.
     paths: ["surge/package.json"]
+  workflow_dispatch:
 
 jobs:
   detect-version-bump:
