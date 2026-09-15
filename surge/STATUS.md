@@ -59,12 +59,12 @@ Surge 虚拟 IP，`oh` / 完整尾网域名解析到 `100.83.72.30`，
 
 - Symptom: Claude Code frequently showed `API error · Retrying` during streaming
   responses. Its local session records contained four `Connection dropped
-  (ECONNRESET)` failures between 15:46 and 17:35 +08; no matching HTTP 429 or
+(ECONNRESET)` failures between 15:46 and 17:35 +08; no matching HTTP 429 or
   Anthropic 5xx response was found.
 - The active route at diagnosis time was `Claude -> s22-via-JP`: a Japanese
   `AI-Relay-JP` node carried the connection to the s22 US residential proxy, which
   then connected to Anthropic. Surge records captured `Read stream EOF` and `TCP
-  error: Connection reset` on this path. The automatic relay selection moved from
+error: Connection reset` on this path. The automatic relay selection moved from
   `CD-🇯🇵 JP | 日本 13` to `Amy-🇯🇵 日本 06` during the observation window.
 - The local access network did not show a concurrent general outage: 100 probes to
   `192.168.1.1` and 50 probes to `223.5.5.5` had zero packet loss; Wi-Fi remained
