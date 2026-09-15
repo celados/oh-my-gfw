@@ -58,7 +58,16 @@ export type RelayPool = {
   // Restrict collection to these source prefixes. Default: every source.
   // Useful if some carrier's nodes are unreliable in a specific region.
   sources?: string[];
+  // url-test switch threshold in ms. Surge only re-selects when the fastest node
+  // beats the current one by more than this, or the current one fails its probe.
+  // Default is deliberately large so a healthy node is never swapped over a
+  // latency jitter — the pool carries long-lived AI streams, and every swap costs
+  // a new egress path (see STATUS.md, 2026-09-09). Lower it only for short-request
+  // workloads that benefit from chasing the fastest node.
+  tolerance?: number;
 };
+
+export const RELAY_TOLERANCE_DEFAULT = 1000;
 
 export type SourceConfig = {
   // Path to the profile (relative to profilesDir)

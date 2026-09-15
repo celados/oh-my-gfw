@@ -11,6 +11,7 @@ import type {
   SourceConfig,
   UserConfig,
 } from "./config.ts";
+import { RELAY_TOLERANCE_DEFAULT } from "./config.ts";
 
 // ============================================================================
 // Path resolution
@@ -436,6 +437,7 @@ type RelayGroup = {
   name: string; // e.g., "AI-Relay-JP"
   relayKey: string;
   members: string[]; // prefixed node names from any of the contributing sources
+  tolerance: number;
 };
 
 function relayGroupName(relayKey: string): string {
@@ -466,7 +468,12 @@ function buildRelayGroups(
       log(`[relay] ${name} is empty (no members match) — skipping`);
       continue;
     }
-    groups.push({ name, relayKey, members });
+    groups.push({
+      name,
+      relayKey,
+      members,
+      tolerance: pool.tolerance ?? RELAY_TOLERANCE_DEFAULT,
+    });
   }
   return groups;
 }
@@ -666,7 +673,7 @@ function generateConfig(ctx: BuildContext): string {
     sections.push(`# === Relay Groups (aggregated by region across sources) ===`);
     for (const g of relayGroups) {
       sections.push(
-        `${g.name} = url-test, ${g.members.join(", ")}, url=http://www.gstatic.com/generate_204, interval=600, tolerance=50`,
+        `${g.name} = url-test, ${g.members.join(", ")}, url=http://www.gstatic.com/generate_204, interval=600, tolerance=${g.tolerance}`,
       );
     }
     sections.push("");

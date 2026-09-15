@@ -50,7 +50,8 @@ User config is a TypeScript module default-exporting `defineConfig({...})`:
 
 - `sources[]` — carrier profiles (facade `#!include` → `.managed/<md5>.conf`)
 - `proxies` — direct proxy library for AI outlets
-- `relays` — cross-source `AI-Relay-{key}` url-test pools
+- `relays` — cross-source `AI-Relay-{key}` url-test pools (`tolerance` defaults
+  to 1000 ms so the pool only re-selects when the current node fails)
 - `aiProfiles[]` — select groups + PROCESS-NAME / domain rules
 - `topLevelGroups` — Proxy / Best / carrier aggregates
 - `template` — general / dns / rulesets
