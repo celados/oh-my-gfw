@@ -32,7 +32,12 @@ export default defineConfig({
       direct: ["home"],
       chained: { proxies: ["home"], relayKey: "JP" },
       relayOnly: { relayKey: "JP" },
-      processes: ["~/.local/share/claude/versions/*"],
+      processes: [
+        "~/.local/share/claude/versions/*",
+        // Claude Desktop's telemetry and login hCaptcha miss the domain rules;
+        // pin the whole app so every Desktop flow shares the Claude egress.
+        "/Applications/Claude.app/*",
+      ],
       domains: ["anthropic.com", "claude.ai", "claude.com"],
     },
     {
