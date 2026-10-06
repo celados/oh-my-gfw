@@ -155,6 +155,7 @@ proxies:
   # Webshare 家宽住宅 IP。AI 服务对机房 IP 的风控比住宅 IP 严,这是直连出口。
   - name: s22
     type: http
+    # vault: webshare-s22
     server: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/server }}"
     port: 5669
     username: "{{ bw://3e033f2a-2fbc-49cc-aa01-c793a62cb42d/username }}"
