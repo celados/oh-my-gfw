@@ -77,7 +77,7 @@ geodata 下载上直到成功才开始监听，失败还会留下截断的 `.dat
 `config.yaml.tpl` 里 Webshare 家宽代理(`s22`)的 server/username/password 走
 `{{ bw:// }}` 占位，渲染产物 `config.yaml` 已 gitignore。
 
-条目已建：Vaultwarden Shared 集合 `webshare-s22`
+条目已建：Vaultwarden Shared 集合 `webshare / s22`
 （`3e033f2a-2fbc-49cc-aa01-c793a62cb42d`，2026-08-25），渲染管线已闭环。
 
 ## 订阅
